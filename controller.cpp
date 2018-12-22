@@ -3,7 +3,7 @@
 //  my_elevator
 //
 //  Created by 中山附一 on 2018/12/17.
-//  Copyright © 2018 mdy. All rights reserved.
+//  Copyright  2018 mdy. All rights reserved.
 //
 
 #include "controller.hpp"
@@ -21,6 +21,95 @@ int ElevatorId = 0;//电梯id
 int LeavePeople=0;//离开的用户
 int ServerdPeople=0;//服务的用户
 int TotalWaitTime=0;//用户等待的时间
+
+#define HEIGHT 25
+#define WIDTH 80
+
+using namespace std;
+
+void ClearScreen(){
+
+}
+
+void gotoxy(int x,int y){
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO cci;
+    GetConsoleCursorInfo(hOut,&cci);
+    COORD pos;
+    pos.X=x;
+    pos.Y=y;
+    SetConsoleCursorPosition(hOut,pos);
+}
+
+void HideCarsor(){
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO cci;
+    GetConsoleCursorInfo(hOut,&cci);
+    cci.bVisible=false;
+    SetConsoleCursorInfo(hOut,&cci);
+}
+
+
+void PrintInfo(){
+    printf("电梯数目：%d\n",MAX_ELEVATOR);
+    printf("楼层数目：%d\n",MAX_FLOOR);
+    printf("时间：    /%d\n\n",TotalTime);
+
+    for(int i=0;i<MAX_ELEVATOR;++i){
+        printf("电梯%d 当前楼层:   状态:\n",elevator[i].id);
+    }
+    for(int i=0;i<MAX_ELEVATOR;++i){
+        gotoxy(WIDTH/2-1+i*6+4,0);
+        cout<<"电梯"<<i<<" ";
+    }
+    for(int i=MAX_FLOOR+1;i>=1;--i){
+        gotoxy(WIDTH/2-1,MAX_FLOOR-i+2);
+        cout<<"F"<<i;
+    }
+}
+
+string ConditionToString(Condition c){
+    switch (c) {
+    case Idle:
+        return "待机    ";
+    case Opening:
+        return "开门中  ";
+    case Closing:
+        return "关门中  ";
+    case Moving:
+        return "移动中  ";
+    case Decelerate:
+        return "减速中  ";
+    case Closed:
+        return "关门了  ";
+    case Opened:
+        return "门打开了";
+    case Add:
+        return "用户等待";
+    default:
+        return "未知    ";
+    }
+}
+
+void PrintTime(){
+    gotoxy(6,2);
+    printf("%d",CurrentTime);
+    for(int i=0;i<MAX_ELEVATOR;++i){
+        gotoxy(15,4+i);
+        cout<<elevator[i].floor<<" ";
+        gotoxy(23,4+i);
+        cout<<ConditionToString(elevator[i].condition);
+        for(int j=MAX_FLOOR+1;j>=1;--j){
+            gotoxy(WIDTH/2-1+i*6+4,MAX_FLOOR-j+2);
+            if(elevator[i].floor==j-1){
+                cout<<"["<<elevator[i].peopleNum<<"]";
+            }else{
+                cout<<" "<<elevator[i].w_q[j-1][1].rear+elevator[i].w_q[j-1][0].rear-2<<" ";
+            }
+        }
+    }
+    sleep(0.01);
+}
 
 /**
  添加新的事件
@@ -69,7 +158,7 @@ Condition AddPeople(Elevator &e){
         s = EnQueue(e.w_q[p->InFloor][GoingUp],*p);
         e.CallUp[p->InFloor]=true;
     }
-    if(s==OK)printf("用户%d进入了%d号电梯下的%d楼，他要去%d楼\n",p->id,e.id,p->InFloor,p->OutFloor);
+    if(s==YES)//printf("用户%d进入了%d号电梯下的%d楼，他要去%d楼\n",p->id,e.id,p->InFloor,p->OutFloor);
     //下一个用户到来的事件添加
     AddActivity(CurrentTime+rand()%EnterTime,AddPeople,elevator[rand()%MAX_ELEVATOR]);
     return Add;
@@ -86,7 +175,7 @@ Condition InAndOut(Elevator &e){
         if(IsEmpty_S(e.i_s[e.floor])!=YES){
             Pop(e.i_s[e.floor],p);
             e.peopleNum--;
-            printf("客户%d离开%d号电梯中\n",p.id,e.id);
+           // printf("客户%d离开%d号电梯中\n",p.id,e.id);
             AddActivity(CurrentTime+MOVE_TIME,InAndOut,e);
         }else{
             e.CallCar[e.floor]=false;
@@ -99,13 +188,13 @@ Condition InAndOut(Elevator &e){
             Push(e.i_s[p.OutFloor],p);
             e.peopleNum++;
             e.CallCar[p.OutFloor]=true;
-            printf("客户%d进入%d号电梯中\n",p.id,e.id);
+            //printf("客户%d进入%d号电梯中\n",p.id,e.id);
             AddActivity(CurrentTime+MOVE_TIME,InAndOut,e);
             ServerdPeople++;
             TotalWaitTime+=CurrentTime-p.inTime;
         }else{
             e.state==GoingDown?e.CallDown[e.floor]=false:e.CallUp[e.floor]=false;
-            AddActivity(CurrentTime,close,e);
+            AddActivity(CurrentTime,Close,e);
         }
     }
     return None;
@@ -131,8 +220,12 @@ void init(){
 }
 
 void run(){
+    HideCarsor();
+    PrintInfo();
+    //首先为时序添加一个用户
     AddActivity(CurrentTime+rand()%EnterTime,AddPeople,elevator[rand()%MAX_ELEVATOR]);
     while(++CurrentTime<=TotalTime){
+        //
         for(int m=0;m<MAX_ELEVATOR;++m){
             if(elevator[m].condition==Opened){
                 InAndOut(elevator[m]);
@@ -146,24 +239,26 @@ void run(){
         while(NULL!=activities&&activities->endTime<=CurrentTime){
             switch (activities->fn(*(activities->e))) {
                 case Opened:
-                    AddActivity(CurrentTime+activities->e->count,close,*activities->e);
+                    AddActivity(CurrentTime+activities->e->count,Close,*activities->e);
                     break;
                 case Decelerate:
                 case Closing:
                 case Opening:
-                case Moveing:
-                    AddActivity(CurrentTime+activities->e->count,stop,*activities->e);
+                case Moving:
+                    AddActivity(CurrentTime+activities->e->count,Stop,*activities->e);
                     break;
                 case Add:
                 case Idle:
-                case Closed://if(elevator[0].condition!=Idle)printf("关门啦测试\n");
-                    AddActivity(CurrentTime+activities->e->count,open,*activities->e);
+                case Closed:
+                    AddActivity(CurrentTime+activities->e->count,Open,*activities->e);
                     break;
                 default:
                     break;
             };
             activities=activities->next;
         }
+        //PrintTime();
     }
-     printf("一共来了%d人,%d人没等电梯就走了,服务了%d个人,平均等待时间为%f\n",UserId-1,LeavePeople,ServerdPeople,TotalWaitTime/(ServerdPeople*1.0));
+    gotoxy(0,12);
+    printf("一共来了%d人,%d人没等电梯就走了,服务了%d个人,平均等待时间为%f\n",UserId,LeavePeople,ServerdPeople,TotalWaitTime/(ServerdPeople*1.0));
 }
