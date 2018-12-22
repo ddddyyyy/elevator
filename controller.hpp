@@ -11,16 +11,16 @@
 
 #include "elevator.hpp"
 
-#define MAX_ELEVATOR 5//电梯的数量
+#define MAX_ELEVATOR 1//电梯的数量
 
 /**
  时序结构体
  */
 typedef struct activity{
-    int endTime;
-    Elevator *e;
-    Condition(*fn)(Elevator&);
-    struct activity *next;
+    int endTime;//动作结束的时间
+    Elevator *e;//动作对应的电梯
+    Condition(*fn)(Elevator&);//执行的动作
+    struct activity *next;//下一个动作
 }Activity;
 
 void init();

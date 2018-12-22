@@ -14,7 +14,7 @@
 
 #define MAX_PEOPLE 10 //电梯内的最多人
 #define MIN_FLOOR 0 //电梯最底层
-#define MAX_FLOOR 3 //电梯最高层
+#define MAX_FLOOR 5 //电梯最高层
 #define OC_TIME 20*T //开关门的时间
 #define DELAY_TIME 300*T //在某层静止的超时时间
 #define TEST_TIME 40*T //有人进出时，电梯每隔40t测试一次，若无人进出，则关门
@@ -42,9 +42,10 @@ enum Condition
     Opened,//已经开门
     Closing,//正在关门
     Closed,//关门
-    Moveing,//移动
+    Moving,//移动
     Decelerate,//减速
     None,
+    InOut,
     Add
 };
 
@@ -67,10 +68,9 @@ typedef struct{
 
 void InitElevator(Elevator &e);
 
-Condition open(Elevator &e);
-Condition close(Elevator &e);
-Condition move(Elevator &e);
-Condition stop(Elevator &e);
+Condition Open(Elevator &e);
+Condition Close(Elevator &e);
+Condition Stop(Elevator &e);
 
 bool CheckStop(Elevator  e);
 Condition GetNextStep(Elevator &e);

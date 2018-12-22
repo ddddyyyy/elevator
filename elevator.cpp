@@ -3,7 +3,7 @@
 //  my_elevator
 //
 //  Created by 中山附一 on 2018/12/17.
-//  Copyright © 2018 mdy. All rights reserved.
+//  Copyright  2018 mdy. All rights reserved.
 //
 
 #include "elevator.hpp"
@@ -24,10 +24,10 @@ void InitElevator(Elevator &e){
     }
 }
 
-Condition open(Elevator &e){
+Condition Open(Elevator &e){
     switch (e.condition) {
         case Closed:
-            printf("========电梯%d在%d楼关门了========\n",e.id,e.floor);
+//            printf("========电梯%d在%d楼关门了========\n",e.id,e.floor);
             return GetNextStep(e);
         case Idle:
             if(IsOpen(e)){
@@ -38,7 +38,7 @@ Condition open(Elevator &e){
             }else{
                 Condition c = GetNextStep(e);
                 if(c==Idle&&e.CheckDelay&&e.floor!=1){
-                    e.condition=Moveing;
+                    e.condition=Moving;
                     e.state=e.floor-1>0?GoingDown:GoingUp;
                     e.count=Accelerate+e.floor-1>0?DownTime:UpTime;
                     return e.condition;
@@ -46,36 +46,46 @@ Condition open(Elevator &e){
                     return c;
                 }
             }
+        case Moving:
+            if(e.CheckDelay){
+                e.count=0;
+                return Decelerate;
+            }
+           break;
         default:
             return None;
     }
 }
 
-Condition stop(Elevator &e){
+Condition Stop(Elevator &e){
     switch (e.condition) {
         case Opening://开门完成
-            printf("========电梯%d在%d楼开门了========\n",e.id,e.floor);
+//            printf("========电梯%d在%d楼开门了========\n",e.id,e.floor);
             e.condition = Opened;e.count=TEST_TIME;
             break;
         case Closing://将门的状态设为已关门
             e.condition=Closed;
+            e.count=0;
             break;
         case Decelerate://减速完成,说明已经到达目标楼层
-            printf("=========电梯%d在%d楼停住了==========\n",e.id,e.floor);
+//            printf("=========电梯%d在%d楼停住了==========\n",e.id,e.floor);
             if(IsNeedUp(e)&&e.state==GoingDown&&!e.CallDown[e.floor])e.state=GoingUp;
             else if(IsNeedDown(e)&&e.state==GoingUp&&!e.CallUp[e.floor])e.state=GoingDown;
             //开门
+            //
             if(e.CheckDelay){
                 e.condition=Idle;
+                e.count=0;
+                //e.CheckDelay=false;
             }else{
                 e.condition=Opening;
-                printf("========电梯%d开门中========\n",e.id);
+//                printf("========电梯%d开门中========\n",e.id);
                 e.count=OC_TIME;
             }
             break;
-        case Moveing:
+        case Moving:
             e.state==GoingUp?e.floor+=1:e.floor-=1;
-            printf("==========电梯%d移动到%d层============\n",e.id,e.floor);
+//            printf("==========电梯%d移动到%d层============\n",e.id,e.floor);
             //检查是否要停止
             if(CheckStop(e)){
                 e.condition=Decelerate;
@@ -90,25 +100,11 @@ Condition stop(Elevator &e){
     return e.condition;
 }
 
-Condition move(Elevator &e){
-    e.state==GoingUp?e.floor+=1:e.floor-=1;
-    printf("==========电梯%d移动到%d层============\n",e.id,e.floor);
-    //检查是否要停止
-    if(CheckStop(e)){
-        e.condition=Decelerate;
-        e.count=e.state==GoingUp?UpDecelerate:DownDecelerate;
-    }else{
-        //不停止则继续移动
-        e.state==GoingUp?e.count=UpTime:e.count==DownTime;
-    }
-    return e.condition;
-}
-
-Condition close(Elevator &e){
+Condition Close(Elevator &e){
     switch (e.condition) {
         case Opened:
             if(!e.CallCar[e.floor]&&((e.state==GoingDown&&!e.CallDown[e.floor])||(!e.CallUp[e.floor]&&e.state==GoingUp))){
-                printf("========电梯%d关门中========\n",e.id);
+//                printf("========电梯%d关门中========\n",e.id);
                 e.condition=Closing;
                 e.count=OC_TIME;
             }
@@ -144,9 +140,9 @@ Condition GetNextStep(Elevator &e){
     bool down = IsNeedDown(e);
     //如果有上下楼的请求则返回
     if((e.state==GoingUp&&up)||(e.state==GoingDown&&!down&&up)){
-        e.state=GoingUp;e.condition=Moveing;e.count=Accelerate+UpTime;
+        e.state=GoingUp;e.condition=Moving;e.count=Accelerate+UpTime;
     }else if((e.state==GoingDown&&down)||(e.state==GoingUp&&!up&&down)){
-        e.state=GoingDown;e.condition=Moveing;e.count=Accelerate+DownTime;
+        e.state=GoingDown;e.condition=Moving;e.count=Accelerate+DownTime;
     }else{
         //没有上下楼的请求，则设置电梯的超时时间,并且设置超时标志位
         if(e.condition!=Idle){e.condition=Idle;e.count=DELAY_TIME;e.CheckDelay=true;}

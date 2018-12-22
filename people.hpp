@@ -12,11 +12,15 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <string>
 #include <cstdio>
+#include <time.h>
+#include <unistd.h>
+#include <windows.h>
 
 enum Status
 {
-    OK,ERROR,YES,NO,OVERFLOW
+    YES,NO,OVERFLOW
 };
 #define T  1  //单位时间
 #define MOVE_TIME 25*T //人的进出时间

@@ -33,7 +33,7 @@ Status InitQueue(Queue &Q,int size){
     if (NULL == Q.elem){return OVERFLOW;}
     Q.rear=1;
     Q.maxSize=size+1;
-    return OK;
+    return YES;
 }
 //入队
 Status EnQueue(Queue &Q,People e){
@@ -44,7 +44,7 @@ Status EnQueue(Queue &Q,People e){
         swap(Q.elem, curr, curr/2);
         curr/=2;
     }
-    return OK;
+    return YES;
 }
 //出队
 Status DeQueue(Queue &Q,People &e){
@@ -53,7 +53,7 @@ Status DeQueue(Queue &Q,People &e){
     Q.rear--;
     Q.elem[1]=Q.elem[Q.rear];
     if(Q.rear>1)ShitfDown(Q.elem,1,Q.rear-1);
-    return OK;
+    return YES;
 }
 Status IsEmpty_Q(Queue Q){
     return 1==Q.rear?YES:NO;
@@ -62,9 +62,9 @@ Status IsFull_Q(Queue Q){
     return Q.rear==Q.maxSize?YES:NO;
 }
 Status GetTop_Q(Queue Q,People &e){
-    if(Q.rear==1)return ERROR;
+    if(Q.rear==1)return NO;
     e = Q.elem[1];
-    return OK;
+    return YES;
 }
 void PrintQueue(Queue Q){
     printf("(");
@@ -76,9 +76,9 @@ void PrintQueue(Queue Q){
 int DeletePeople(Queue &Q,int time){
     People p;
     int num = 0;
-    while (GetTop_Q(Q, p)!=ERROR&&p.GiveupTime<=time) {
+    while (GetTop_Q(Q, p)!=NO&&p.GiveupTime<=time) {
         DeQueue(Q,p);
-        printf("客户%d离开了\n",p.id);
+        //printf("客户%d离开了\n",p.id);
         ++num;
     }
     return num;
@@ -90,24 +90,24 @@ int DeletePeople(Queue &Q,int time){
 Status InitStack(Stack &S,int size)
 {
     S.elem = (People*) malloc (sizeof(People)*size);
-    if (NULL == S.elem ){return ERROR;}
+    if (NULL == S.elem ){return NO;}
     S.size = size;
     S.top = 0;
-    return OK;
+    return YES;
 }
 //出栈
 Status Pop(Stack &S,People &e)
 {
     if(S.top==0){return OVERFLOW;}
     e = S.elem[--S.top];
-    return OK;
+    return YES;
 }
 //push
 Status Push(Stack &S,People &e)
 {
     if(S.top==S.size)return OVERFLOW;
     S.elem[S.top++] = e;
-    return OK;
+    return YES;
 }
 //栈S是否为空
 Status IsEmpty_S(Stack S)
