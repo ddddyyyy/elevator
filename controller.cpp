@@ -2,7 +2,6 @@
 //  controller.cpp
 //  my_elevator
 //
-//  Created by 中山附一 on 2018/12/17.
 //  Copyright  2018 mdy. All rights reserved.
 //
 
@@ -62,7 +61,7 @@ void PrintInfo(){
         gotoxy(WIDTH/2-1+i*6+4,0);
         cout<<"电梯"<<i<<" ";
     }
-    for(int i=MAX_FLOOR+1;i>=1;--i){
+    for(int i=MAX_FLOOR;i>=0;--i){
         gotoxy(WIDTH/2-1,MAX_FLOOR-i+2);
         cout<<"F"<<i;
     }
@@ -99,12 +98,12 @@ void PrintTime(){
         cout<<elevator[i].floor<<" ";
         gotoxy(23,4+i);
         cout<<ConditionToString(elevator[i].condition);
-        for(int j=MAX_FLOOR+1;j>=1;--j){
+        for(int j=MAX_FLOOR;j>=0;--j){
             gotoxy(WIDTH/2-1+i*6+4,MAX_FLOOR-j+2);
-            if(elevator[i].floor==j-1){
+            if(elevator[i].floor==j){
                 cout<<"["<<elevator[i].peopleNum<<"]";
             }else{
-                cout<<" "<<elevator[i].w_q[j-1][1].rear+elevator[i].w_q[j-1][0].rear-2<<" ";
+                cout<<" "<<elevator[i].w_q[j][1].rear+elevator[i].w_q[j][0].rear-2<<" ";
             }
         }
     }
@@ -142,11 +141,11 @@ Condition AddPeople(Elevator &e){
     People *p = (People*)malloc(sizeof(People));
     if(NULL==p)return None;
     p->id = UserId++;
-    p->GiveupTime = rand()%GiveupTime+CurrentTime;
+    p->GiveupTime = rand()%GiveupTime+CurrentTime+120;
     p->inTime=CurrentTime;
-    p->InFloor=rand()%MAX_FLOOR+1;
+    p->InFloor=rand()%(MAX_FLOOR+1);
     do{
-        p->OutFloor=rand()%MAX_FLOOR+1;
+        p->OutFloor=rand()%(MAX_FLOOR+1);
     }while(p->InFloor==p->OutFloor);
     //初始化用户 end
     Status s;
@@ -207,8 +206,8 @@ void init(){
     //     scanf("%d",&GiveupTime);
     //     printf("请输入下一个用户的最长到来时间:");
     //     scanf("%d",&_EnterTime);
-    TotalTime = 5000;
-    GiveupTime = 130;
+    TotalTime = 500;
+    GiveupTime = 30;
     EnterTime = 300;
     srand((unsigned)time(NULL));
     elevator = (Elevator*)malloc(sizeof(Elevator)*MAX_ELEVATOR);
@@ -231,7 +230,7 @@ void run(){
                 InAndOut(elevator[m]);
             }
             for(int j=0;j<2;++j){
-                for (int i=0;i<MAX_FLOOR;++i){
+                for (int i=0;i<=MAX_FLOOR;++i){
                     LeavePeople+=DeletePeople(elevator[m].w_q[i][j],CurrentTime);
                 }
             }
@@ -255,9 +254,11 @@ void run(){
                 default:
                     break;
             };
+            Activity *temp = activities;
             activities=activities->next;
+            free(temp);
         }
-        //PrintTime();
+        PrintTime();
     }
     gotoxy(0,12);
     printf("一共来了%d人,%d人没等电梯就走了,服务了%d个人,平均等待时间为%f\n",UserId,LeavePeople,ServerdPeople,TotalWaitTime/(ServerdPeople*1.0));

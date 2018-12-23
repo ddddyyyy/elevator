@@ -2,7 +2,6 @@
 //  elevator.hpp
 //  my_elevator
 //
-//  Created by 中山附一 on 2018/12/17.
 //  Copyright © 2018 mdy. All rights reserved.
 //
 
@@ -14,7 +13,7 @@
 
 #define MAX_PEOPLE 10 //电梯内的最多人
 #define MIN_FLOOR 0 //电梯最底层
-#define MAX_FLOOR 5 //电梯最高层
+#define MAX_FLOOR 4 //电梯最高层
 #define OC_TIME 20*T //开关门的时间
 #define DELAY_TIME 300*T //在某层静止的超时时间
 #define TEST_TIME 40*T //有人进出时，电梯每隔40t测试一次，若无人进出，则关门
