@@ -13,7 +13,6 @@ Elevator *elevator;//电梯
 int CurrentTime=0;//当前的时间
 int TotalTime=0;//运行的总时间
 int GiveupTime=0;//用户放弃的最大时间
-int _EnterTime=0;//最长的新用户进入系统时间
 int EnterTime=0;//新用户到来的时间
 int UserId = 0;//用户id
 int ElevatorId = 0;//电梯id
@@ -200,13 +199,13 @@ Condition InAndOut(Elevator &e){
 }
 
 void init(){
-    //     printf("请输入运行的总时间:");
-    //     scanf("%d",&TotalTime);
-    //     printf("请输入用户的最长容忍时间:");
-    //     scanf("%d",&GiveupTime);
-    //     printf("请输入下一个用户的最长到来时间:");
-    //     scanf("%d",&_EnterTime);
-    TotalTime = 500;
+     printf("请输入运行的总时间:");
+     scanf("%d",&TotalTime);
+     printf("请输入用户的最长容忍时间():");
+     scanf("%d",&GiveupTime);
+     printf("请输入下一个用户的最长到来时间:");
+     scanf("%d",&_EnterTime);
+    TotalTime = 5000;
     GiveupTime = 30;
     EnterTime = 300;
     srand((unsigned)time(NULL));
@@ -258,7 +257,7 @@ void run(){
             activities=activities->next;
             free(temp);
         }
-        PrintTime();
+       // PrintTime();
     }
     gotoxy(0,12);
     printf("一共来了%d人,%d人没等电梯就走了,服务了%d个人,平均等待时间为%f\n",UserId,LeavePeople,ServerdPeople,TotalWaitTime/(ServerdPeople*1.0));
