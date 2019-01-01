@@ -199,6 +199,7 @@ Condition InAndOut(Elevator &e){
 }
 
 void init(){
+<<<<<<< HEAD
 //    printf("请输入运行的总时间:");
 //    scanf("%d",&TotalTime);
 //    printf("请输入用户的最长容忍时间(默认的等待时间为120，以输入的值为界的随机值加上120为最终的等待时间):");
@@ -207,8 +208,19 @@ void init(){
 //    scanf("%d",&EnterTime);
     TotalTime=5000;
     EnterTime=200;
-    GiveupTime=30;
+    GiveupTime=20;
     system("cls");
+=======
+    //     printf("请输入运行的总时间:");
+    //     scanf("%d",&TotalTime);
+    //     printf("请输入用户的最长容忍时间:");
+    //     scanf("%d",&GiveupTime);
+    //     printf("请输入下一个用户的最长到来时间:");
+    //     scanf("%d",&_EnterTime);
+    TotalTime = 5000;
+    GiveupTime = 20;
+    EnterTime = 300;
+>>>>>>> dcb1ecccf1d51e81bf06d861fa71d3c066e4a7f9
     srand((unsigned)time(NULL));
     elevator = (Elevator*)malloc(sizeof(Elevator)*MAX_ELEVATOR);
     for(int i=0;i<MAX_ELEVATOR;++i){
@@ -220,6 +232,7 @@ void init(){
 
 void run(){
     HideCarsor();
+    CLEAR();
     PrintInfo();
     //首先为时序添加一个用户
     AddActivity(CurrentTime+rand()%EnterTime,AddPeople,elevator[rand()%MAX_ELEVATOR]);
