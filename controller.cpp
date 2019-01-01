@@ -124,7 +124,7 @@ void AddActivity(int time,Condition(*fn)(Elevator&),Elevator &e){
         activities=temp;
     }else{
         Activity *act=activities;
-        while (act->next!=NULL&&act->next->endTime<temp->endTime) {
+        while (act->next!=NULL&&act->next->endTime<=temp->endTime) {
             act=act->next;
         }
         temp->next=act->next;
@@ -142,9 +142,9 @@ Condition AddPeople(Elevator &e){
     p->id = UserId++;
     p->GiveupTime = rand()%GiveupTime+CurrentTime+120;
     p->inTime=CurrentTime;
-    p->InFloor=rand()%(MAX_FLOOR+1);
+    p->InFloor=rand()%MAX_FLOOR+1;
     do{
-        p->OutFloor=rand()%(MAX_FLOOR+1);
+        p->OutFloor=rand()%MAX_FLOOR+1;
     }while(p->InFloor==p->OutFloor);
     //初始化用户 end
     Status s;
@@ -199,14 +199,14 @@ Condition InAndOut(Elevator &e){
 }
 
 void init(){
-     printf("请输入运行的总时间:");
-     scanf("%d",&TotalTime);
-     printf("请输入用户的最长容忍时间():");
-     scanf("%d",&GiveupTime);
-     printf("请输入下一个用户的最长到来时间:");
-     scanf("%d",&_EnterTime);
+    //     printf("请输入运行的总时间:");
+    //     scanf("%d",&TotalTime);
+    //     printf("请输入用户的最长容忍时间:");
+    //     scanf("%d",&GiveupTime);
+    //     printf("请输入下一个用户的最长到来时间:");
+    //     scanf("%d",&_EnterTime);
     TotalTime = 5000;
-    GiveupTime = 30;
+    GiveupTime = 20;
     EnterTime = 300;
     srand((unsigned)time(NULL));
     elevator = (Elevator*)malloc(sizeof(Elevator)*MAX_ELEVATOR);
@@ -219,6 +219,7 @@ void init(){
 
 void run(){
     HideCarsor();
+    CLEAR();
     PrintInfo();
     //首先为时序添加一个用户
     AddActivity(CurrentTime+rand()%EnterTime,AddPeople,elevator[rand()%MAX_ELEVATOR]);
@@ -229,7 +230,7 @@ void run(){
                 InAndOut(elevator[m]);
             }
             for(int j=0;j<2;++j){
-                for (int i=0;i<=MAX_FLOOR;++i){
+                for (int i=0;i<MAX_FLOOR;++i){
                     LeavePeople+=DeletePeople(elevator[m].w_q[i][j],CurrentTime);
                 }
             }
@@ -253,11 +254,9 @@ void run(){
                 default:
                     break;
             };
-            Activity *temp = activities;
             activities=activities->next;
-            free(temp);
         }
-       // PrintTime();
+//        PrintTime();
     }
     gotoxy(0,12);
     printf("一共来了%d人,%d人没等电梯就走了,服务了%d个人,平均等待时间为%f\n",UserId,LeavePeople,ServerdPeople,TotalWaitTime/(ServerdPeople*1.0));
