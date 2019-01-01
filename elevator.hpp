@@ -15,6 +15,7 @@
 #define MIN_FLOOR 0 //电梯最底层
 #define MAX_FLOOR 4 //电梯最高层
 #define OC_TIME 20*T //开关门的时间
+#define CANCLE_CLOSE_TIME 10*T
 #define DELAY_TIME 300*T //在某层静止的超时时间
 #define TEST_TIME 40*T //有人进出时，电梯每隔40t测试一次，若无人进出，则关门
 #define Accelerate 15*T    //加速时间
@@ -63,6 +64,7 @@ typedef struct{
     int peopleNum;//用户的数量
     int InOutTime;//用户进出电梯的时间
     bool CheckDelay;
+    bool IsClosing;
 }Elevator;
 
 void InitElevator(Elevator &e);

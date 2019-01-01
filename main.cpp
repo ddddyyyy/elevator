@@ -1,8 +1,8 @@
 //
-//  main.cpp
+//  controller.cpp
 //  my_elevator
 //
-//  Copyright © 2018 mdy. All rights reserved.
+//  Copyright  2018 mdy. All rights reserved.
 //
 
 #include <iostream>

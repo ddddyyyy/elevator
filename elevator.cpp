@@ -45,7 +45,11 @@ Condition Open(Elevator &e){
                     return c;
                 }
             }
-        //
+        case Closing:
+            e.IsClosing=false;
+            e.condition=Opening;
+            e.count=CANCLE_CLOSE_TIME;
+            return e.condition;
         default:
             return None;
     }
@@ -58,13 +62,16 @@ Condition Stop(Elevator &e){
             e.condition = Opened;e.count=TEST_TIME;
             break;
         case Closing://将门的状态设为已关门
-            e.condition=Closed;
-            e.count=0;
+            if(e.IsClosing){
+                e.condition=Closed;
+                e.count=0;
+            }else{
+                return None;
+            }
             break;
         case Decelerate://减速完成,说明已经到达目标楼层
             if(IsNeedUp(e)&&e.state==GoingDown&&!e.CallDown[e.floor])e.state=GoingUp;
             else if(IsNeedDown(e)&&e.state==GoingUp&&!e.CallUp[e.floor])e.state=GoingDown;
-
             if(e.CheckDelay&&e.floor==1){
                 e.condition=Idle;
                 e.count=0;
@@ -99,6 +106,7 @@ Condition Close(Elevator &e){
             if(!e.CallCar[e.floor]&&((e.state==GoingDown&&!e.CallDown[e.floor])||(!e.CallUp[e.floor]&&e.state==GoingUp))){
 //                printf("========电梯%d关门中========\n",e.id);
                 e.condition=Closing;
+                e.IsClosing=true;
                 e.count=OC_TIME;
             }
             return e.condition;
