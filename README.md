@@ -2,7 +2,7 @@
 
 ---
 
-> 仅支持windwos平台，如果要在linux下运行，需要删除windows.h头文件，并移除动态显示的函数
+> 支持windwos平台，如果要在linux等系统下运行，可以使用unix分支，默认分支为windwos下的
 
 > 使用C语言风格实现的电梯模拟系统
 
