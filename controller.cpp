@@ -51,7 +51,7 @@ void HideCarsor(){
 void PrintInfo(){
     printf("电梯数目：%d\n",MAX_ELEVATOR);
     printf("楼层数目：%d\n",MAX_FLOOR);
-    printf("时间：    /%d\n\n",TotalTime);
+    printf("时间：      /%d\n\n",TotalTime);
 
     for(int i=0;i<MAX_ELEVATOR;++i){
         printf("电梯%d 当前楼层:   状态:\n",elevator[i].id);
@@ -174,7 +174,6 @@ Condition InAndOut(Elevator &e){
         if(IsEmpty_S(e.i_s[e.floor])!=YES){
             Pop(e.i_s[e.floor],p);
             e.peopleNum--;
-           // printf("客户%d离开%d号电梯中\n",p.id,e.id);
             AddActivity(CurrentTime+MOVE_TIME,InAndOut,e);
         }else{
             e.CallCar[e.floor]=false;
@@ -228,7 +227,6 @@ void init(){
             elevator[i].id=ElevatorId++;
         }
         run();
-        printf("按任意键返回\n");
         system("pause");
         system("cls");
     }
