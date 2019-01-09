@@ -10,8 +10,6 @@
 
 #include "elevator.hpp"
 
-#define MAX_ELEVATOR 5//电梯的数量
-
 /**
  时序结构体
  */

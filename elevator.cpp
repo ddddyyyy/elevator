@@ -7,15 +7,23 @@
 
 #include "elevator.hpp"
 
+extern int MAX_FLOOR;
+
 void InitElevator(Elevator &e){
     e.condition=Idle;
     e.state=GoingUp;
     e.floor=1;
-    e.InOutTime=0;
     e.peopleNum=0;
     e.count=0;
     e.CheckDelay=false;
-    for (int i=0;i<(MAX_FLOOR+1);++i){
+    e.IsClosing=false;
+    e.w_q = (Queue**)malloc(sizeof(Queue*)*MAX_FLOOR);
+    e.i_s = (Stack*)malloc(sizeof(Stack)*MAX_FLOOR);
+    e.CallUp = (bool*)malloc(sizeof(bool)*MAX_FLOOR);
+    e.CallCar = (bool*)malloc(sizeof(bool)*MAX_FLOOR);
+    e.CallDown = (bool*)malloc(sizeof(bool)*MAX_FLOOR);
+    for (int i=0;i<(MAX_FLOOR);++i){
+        e.w_q[i] = (Queue*)malloc(sizeof(Queue)*2);
         InitQueue(e.w_q[i][GoingDown],MAX_QUEUE_SIZE);
         InitQueue(e.w_q[i][GoingUp],MAX_QUEUE_SIZE);
         InitStack(e.i_s[i],MAX_PEOPLE);
@@ -26,9 +34,9 @@ void InitElevator(Elevator &e){
 Condition Open(Elevator &e){
     switch (e.condition) {
         case Closed:
-//            printf("========ç”µæ¢¯%dåœ¨%dæ¥¼å…³é—¨äº†========\n",e.id,e.floor);
             return GetNextStep(e);
         case Idle:
+            //ÊÇ·ñ¿ªÃÅ
             if(IsOpen(e)){
                 e.condition = Opening;
                 e.count=OC_TIME;
@@ -36,20 +44,28 @@ Condition Open(Elevator &e){
                 return e.condition;
             }else{
                 Condition c = GetNextStep(e);
-                if(c==Idle&&e.CheckDelay&&e.floor!=1){
+                //»Øµ½±¾ÀÝ²ã
+                if(c==None&&e.CheckDelay&&e.floor!=1){
                     e.condition=Moving;
                     e.state=e.floor-1>0?GoingDown:GoingUp;
                     e.count=Accelerate+e.floor-1>0?DownTime:UpTime;
                     return e.condition;
                 }else{
+                    e.CheckDelay=false;
                     return c;
                 }
             }
+        //¹ØÃÅµÄÊ±ºòÈç¹ûÓÐÐÂµÄÈËÀ´
         case Closing:
-            e.IsClosing=false;
-            e.condition=Opening;
-            e.count=CANCLE_CLOSE_TIME;
-            return e.condition;
+            //Èç¹ûÊÇµ±Ç°²ãµÄÈËÇëÇóÔòÈ¡Ïû¹ØÃÅ
+            if(IsOpen(e)){
+                e.IsClosing=false;
+                e.condition=Opening;
+                e.count=CANCLE_CLOSE_TIME;
+                return e.condition;
+            }else{
+                return None;
+            }
         default:
             return None;
     }
@@ -57,41 +73,39 @@ Condition Open(Elevator &e){
 
 Condition Stop(Elevator &e){
     switch (e.condition) {
-        case Opening://å¼€é—¨å®Œæˆ
-//            printf("========ç”µæ¢¯%dåœ¨%dæ¥¼å¼€é—¨äº†========\n",e.id,e.floor);
+        case Opening://¿ªÃÅÍê³É
             e.condition = Opened;e.count=TEST_TIME;
             break;
-        case Closing://å°†é—¨çš„çŠ¶æ€è®¾ä¸ºå·²å…³é—¨
+        case Closing://½«ÃÅµÄ×´Ì¬ÉèÎªÒÑ¹ØÃÅ
             if(e.IsClosing){
+                e.IsClosing=false;
                 e.condition=Closed;
                 e.count=0;
             }else{
                 return None;
             }
             break;
-        case Decelerate://å‡é€Ÿå®Œæˆ,è¯´æ˜Žå·²ç»åˆ°è¾¾ç›®æ ‡æ¥¼å±‚
+        case Decelerate://¼õËÙÍê³É,ËµÃ÷ÒÑ¾­µ½´ïÄ¿±êÂ¥²ã
             if(IsNeedUp(e)&&e.state==GoingDown&&!e.CallDown[e.floor])e.state=GoingUp;
             else if(IsNeedDown(e)&&e.state==GoingUp&&!e.CallUp[e.floor])e.state=GoingDown;
             if(e.CheckDelay&&e.floor==1){
                 e.condition=Idle;
                 e.count=0;
                 e.CheckDelay=false;
-            }else{//å¼€é—¨
+            }else{//¿ªÃÅ
                 e.condition=Opening;
-//                printf("========ç”µæ¢¯%då¼€é—¨ä¸­========\n",e.id);
                 e.count=OC_TIME;
             }
             break;
         case Moving:
+            //¼ì²éÊÇ·ñÒªÍ£Ö¹
             e.state==GoingUp?e.floor+=1:e.floor-=1;
-            //æ£€æŸ¥æ˜¯å¦è¦åœæ­¢
             if(CheckStop(e)){
                 e.condition=Decelerate;
                 e.count=e.state==GoingUp?UpDecelerate:DownDecelerate;
-                e.CheckDelay=false;
             }else{
-                //ä¸åœæ­¢åˆ™ç»§ç»­ç§»åŠ¨
-                e.state==GoingUp?e.count=UpTime:e.count==DownTime;
+                //²»Í£Ö¹Ôò¼ÌÐøÒÆ¶¯
+                e.count=e.state==GoingUp?UpTime:DownTime;
             }
             break;
         default:
@@ -103,24 +117,27 @@ Condition Stop(Elevator &e){
 Condition Close(Elevator &e){
     switch (e.condition) {
         case Opened:
+            //È·ÈÏÊÇ·ñÓÐÈËÒª½øµçÌÝ
             if(!e.CallCar[e.floor]&&((e.state==GoingDown&&!e.CallDown[e.floor])||(!e.CallUp[e.floor]&&e.state==GoingUp))){
-//                printf("========ç”µæ¢¯%då…³é—¨ä¸­========\n",e.id);
                 e.condition=Closing;
                 e.IsClosing=true;
                 e.count=OC_TIME;
+            }else{
+                //ÓÐÔòÖØÖÃ¹ØÃÅÊ±¼ä
+                e.count=TEST_TIME;
             }
             return e.condition;
         default:
             return None;
     }
-
 }
 
-//åˆ¤æ–­ç”µæ¢¯æ˜¯å¦è¦åœæ­¢
+//ÅÐ¶ÏµçÌÝÊÇ·ñÒªÍ£Ö¹
 bool CheckStop(Elevator e){
-    //æ˜¯å¦è¿™ä¸€å±‚æœ‰äººè¦åŽ»
+    if(e.floor>=MAX_FLOOR||e.floor<0)return true;
+    //ÊÇ·ñÕâÒ»²ãÓÐÈËÒªÈ¥
     if(e.CallCar[e.floor]) return true;
-    //æ²¡äººåŽ»åˆ™æ£€æŸ¥æ˜¯å¦æœ‰äººåœ¨è¿™ä¸€å±‚æŒ‰äº†ç”µæ¢¯æŒ‰é’®
+    //Ã»ÈËÈ¥Ôò¼ì²éÊÇ·ñÓÐÈËÔÚÕâÒ»²ã°´ÁËµçÌÝ°´Å¥
     if((e.state==GoingUp&&e.CallUp[e.floor])||(e.state==GoingDown&&e.CallDown[e.floor]))
         return true;
     if(e.state==GoingDown&&e.CallUp[e.floor]&&!IsNeedDown(e)){
@@ -131,27 +148,30 @@ bool CheckStop(Elevator e){
         e.state=GoingDown;
         return true;
     }
+    //È·ÈÏÊÇ·ñ»Øµ½ÁË±¾ÀÝ²ã
     if(e.CheckDelay&&e.floor==1)return true;
     return false;
 }
 
-//ç¡®è®¤ç”µæ¢¯çš„ä¸‹ä¸€æ­¥è¡ŒåŠ¨
+//È·ÈÏµçÌÝµÄÏÂÒ»²½ÐÐ¶¯
 Condition GetNextStep(Elevator &e){
     bool up = IsNeedUp(e);
     bool down = IsNeedDown(e);
-    //å¦‚æžœæœ‰ä¸Šä¸‹æ¥¼çš„è¯·æ±‚åˆ™è¿”å›ž
+    //Èç¹ûÓÐÉÏÏÂÂ¥µÄÇëÇóÔò·µ»Ø
     if((e.state==GoingUp&&up)||(e.state==GoingDown&&!down&&up)){
         e.state=GoingUp;e.condition=Moving;e.count=Accelerate+UpTime;e.CheckDelay=false;
     }else if((e.state==GoingDown&&down)||(e.state==GoingUp&&!up&&down)){
         e.state=GoingDown;e.condition=Moving;e.count=Accelerate+DownTime;e.CheckDelay=false;
     }else{
-        //æ²¡æœ‰ä¸Šä¸‹æ¥¼çš„è¯·æ±‚ï¼Œåˆ™è®¾ç½®ç”µæ¢¯çš„è¶…æ—¶æ—¶é—´,å¹¶ä¸”è®¾ç½®è¶…æ—¶æ ‡å¿—ä½
+        //Ã»ÓÐÉÏÏÂÂ¥µÄÇëÇó£¬ÔòÉèÖÃµçÌÝµÄ³¬Ê±Ê±¼ä,²¢ÇÒÉèÖÃ³¬Ê±±êÖ¾Î»
         if(e.condition!=Idle){e.condition=Idle;e.count=DELAY_TIME;e.CheckDelay=true;}
+        //Èç¹ûÊÇ±¾À´¾ÍÒÑ¾­´ý»ú×´Ì¬ÁË£¬¾ÍÖ±½Ó·µ»ØÎÞÐè×öÈÎºÎ¶îÍâµÄ¶¯×÷
+        else return None;
     }
     return e.condition;
 }
 
-//åˆ¤æ–­æ˜¯å¦è¦å¼€é—¨
+//ÅÐ¶ÏÊÇ·ñÒª¿ªÃÅ
 bool IsOpen(Elevator &e){
     if(e.CallCar[e.floor]||(e.CallDown[e.floor]&&e.state==GoingDown)||(e.CallUp[e.floor]&&e.state==GoingUp)) return true;
     if(e.condition==Idle){
@@ -161,15 +181,15 @@ bool IsOpen(Elevator &e){
     return false;
 }
 
-//åˆ¤æ–­æ˜¯å¦æœ‰ç§»åŠ¨åˆ°é«˜å±‚çš„è¯·æ±‚
+//ÅÐ¶ÏÊÇ·ñÓÐÒÆ¶¯µ½¸ß²ãµÄÇëÇó
 bool IsNeedUp(Elevator e){
-    for(int i=e.floor+1;i<=MAX_FLOOR;i++)
+    for(int i=e.floor+1;i<MAX_FLOOR;i++)
         if(e.CallCar[i]||e.CallDown[i]||e.CallUp[i]) return true;
     return false;
 }
-//åˆ¤æ–­æ˜¯å¦æœ‰ç§»åŠ¨åˆ°ä½Žå±‚çš„è¯·æ±‚
+//ÅÐ¶ÏÊÇ·ñÓÐÒÆ¶¯µ½µÍ²ãµÄÇëÇó
 bool IsNeedDown(Elevator e){
-    for(int i=MIN_FLOOR;i<=e.floor-1;i++)
+    for(int i=0;i<=e.floor-1;i++)
         if(e.CallCar[i]||e.CallDown[i]||e.CallUp[i]) return true;
     return false;
 }

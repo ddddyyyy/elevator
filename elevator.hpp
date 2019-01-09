@@ -2,7 +2,7 @@
 //  elevator.hpp
 //  my_elevator
 //
-//  Copyright Â© 2018 mdy. All rights reserved.
+//  Copyright  2018 mdy. All rights reserved.
 //
 
 #ifndef elevator_hpp
@@ -10,69 +10,67 @@
 
 #include "people.hpp"
 
+#define MAX_PEOPLE 10 //µçÌİÄÚµÄ×î¶àÈË
 
-#define MAX_PEOPLE 10 //ç”µæ¢¯å†…çš„æœ€å¤šäºº
-#define MIN_FLOOR 0 //ç”µæ¢¯æœ€åº•å±‚
-#define MAX_FLOOR 4 //ç”µæ¢¯æœ€é«˜å±‚
-#define OC_TIME 20*T //å¼€å…³é—¨çš„æ—¶é—´
+#define OC_TIME 20*T //¿ª¹ØÃÅµÄÊ±¼ä
 #define CANCLE_CLOSE_TIME 10*T
-#define DELAY_TIME 300*T //åœ¨æŸå±‚é™æ­¢çš„è¶…æ—¶æ—¶é—´
-#define TEST_TIME 40*T //æœ‰äººè¿›å‡ºæ—¶ï¼Œç”µæ¢¯æ¯éš”40tæµ‹è¯•ä¸€æ¬¡ï¼Œè‹¥æ— äººè¿›å‡ºï¼Œåˆ™å…³é—¨
-#define Accelerate 15*T    //åŠ é€Ÿæ—¶é—´
-#define UpTime    51*T    //ä¸Šå‡æ—¶é—´
-#define DownTime 61*T    //ä¸‹é™æ—¶é—´
-#define UpDecelerate 14*T      //ä¸Šå‡å‡é€Ÿ
-#define DownDecelerate 23*T    //ä¸‹é™å‡é€Ÿ
+#define DELAY_TIME 300*T //ÔÚÄ³²ã¾²Ö¹µÄ³¬Ê±Ê±¼ä
+#define TEST_TIME 40*T //ÓĞÈË½ø³öÊ±£¬µçÌİÃ¿¸ô40t²âÊÔÒ»´Î£¬ÈôÎŞÈË½ø³ö£¬Ôò¹ØÃÅ
+#define Accelerate 15*T    //¼ÓËÙÊ±¼ä
+#define UpTime    51*T    //ÉÏÉıÊ±¼ä
+#define DownTime 61*T    //ÏÂ½µÊ±¼ä
+#define UpDecelerate 14*T      //ÉÏÉı¼õËÙ
+#define DownDecelerate 23*T    //ÏÂ½µ¼õËÙ
 
 
-//ç”µæ¢¯çš„æ–¹å‘
+//µçÌİµÄ·½Ïò
 enum State
 {
-    GoingUp,//ä¸Šå‡
-    GoingDown,//ä¸‹é™
+    GoingUp,//ÉÏÉı
+    GoingDown,//ÏÂ½µ
 };
 
 /*
- *ç”µæ¢¯å½“å‰çš„è¿è¡ŒçŠ¶æ€
+ *µçÌİ×´Ì¬
  */
 enum Condition
 {
-    Idle,//ç­‰å€™
-    Opening,//å¼€é—¨ä¸­
-    Opened,//å·²ç»å¼€é—¨
-    Closing,//æ­£åœ¨å…³é—¨
-    Closed,//å…³é—¨
-    Moving,//ç§»åŠ¨
-    Decelerate,//å‡é€Ÿ
-    None,
-    InOut,
-    Add
+    Idle,//µÈºò
+    Opening,//¿ªÃÅÖĞ
+    Opened,//ÒÑ¾­¿ªÃÅ
+    Closing,//ÕıÔÚ¹ØÃÅ
+    Closed,//¹ØÃÅ
+    Moving,//ÒÆ¶¯
+    Decelerate,//¼õËÙ
+    None,//ÎŞ
+    Add//ÓÃ»§½øÈëÏµÍ³
 };
 
 typedef struct{
-    State state;//ç”µæ¢¯å½“å‰çš„æ–¹å‘
-    Condition condition;//ç”µæ¢¯å½“å‰è¿›è¡Œçš„æ´»åŠ¨
-    bool CallUp[MAX_FLOOR+1];//ç”µæ¢¯å¤–å‘ä¸Šçš„æŒ‰é’®
-    bool CallDown[MAX_FLOOR+1];//ç”µæ¢¯å¤–å‘ä¸‹çš„æŒ‰é’®
-    bool CallCar[MAX_FLOOR+1];//ç”µæ¢¯å†…çš„æŒ‰é’®
-    int floor;//å½“å‰çš„æ¥¼å±‚
-    Queue w_q[MAX_FLOOR+1][2];//æ¯ä¸€å±‚çš„æ’é˜Ÿé˜Ÿåˆ—,ç¬¬ä¸€ç»„ä¸ºä¸Šå»çš„äººï¼Œç¬¬äºŒç»„ä¸ºä¸‹å»çš„äºº
-    Stack i_s[MAX_FLOOR+1];//ç”µæ¢¯å†…çš„äººï¼ŒæŒ‰ç›®æ ‡å±‚æ•°å…¥æ ˆ
+    State state;//µçÌİµ±Ç°µÄ·½Ïò
+    Condition condition;//µçÌİµ±Ç°½øĞĞµÄ»î¶¯
+    bool *CallUp;//µçÌİÍâÏòÉÏµÄ°´Å¥
+    bool *CallDown;//µçÌİÍâÏòÏÂµÄ°´Å¥
+    bool *CallCar;//µçÌİÄÚµÄ°´Å¥
+    int floor;//µ±Ç°µÄÂ¥²ã
+    Queue **w_q;//Ã¿Ò»²ãµÄÅÅ¶Ó¶ÓÁĞ,µÚÒ»×éÎªÉÏÈ¥µÄÈË£¬µÚ¶ş×éÎªÏÂÈ¥µÄÈË
+    Stack *i_s;//µçÌİÄÚµÄÈË£¬°´Ä¿±ê²ãÊıÈëÕ»
     
     int id;
-    int count;//è¿è¡Œçš„è®¡æ•°å™¨
-    int peopleNum;//ç”¨æˆ·çš„æ•°é‡
-    int InOutTime;//ç”¨æˆ·è¿›å‡ºç”µæ¢¯çš„æ—¶é—´
-    bool CheckDelay;
-    bool IsClosing;
+    int count;//ÔËĞĞµÄ¼ÆÊıÆ÷
+    int peopleNum;//ÓÃ»§µÄÊıÁ¿
+    bool CheckDelay;//±êÖ¾ÊÇ·ñÔÚ¼ì²â³¬Ê±
+    bool IsClosing;//±êÖ¾ÊÇ·ñÕıÔÚ¹ØÃÅ
 }Elevator;
 
 void InitElevator(Elevator &e);
 
+// µçÌİµÄ¶¯×÷³éÏó
+//---start-----//
 Condition Open(Elevator &e);
 Condition Close(Elevator &e);
 Condition Stop(Elevator &e);
-
+//---end-----//
 bool CheckStop(Elevator  e);
 Condition GetNextStep(Elevator &e);
 bool IsNeedUp(Elevator e);
