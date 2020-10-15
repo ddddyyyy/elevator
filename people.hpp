@@ -15,7 +15,7 @@
 #include <cstdio>
 #include <time.h>
 #include <unistd.h>
-#include <windows.h>
+//#include <windows.h>
 
 enum Status
 {

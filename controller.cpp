@@ -10,92 +10,88 @@
 int MAX_ELEVATOR=5;
 int MAX_FLOOR=5;
 
-Activity *activities;//Ê±ĞòµÄ»î¶¯Á´n±í
-Elevator *elevator;//µçÌİ
+Activity *activities;//æ—¶åºçš„æ´»åŠ¨é“¾nè¡¨
+Elevator *elevator;//ç”µæ¢¯
 
-int mode;//ÏÔÊ¾Ä£Ê½
-int CurrentTime=0;//µ±Ç°µÄÊ±¼ä
-int TotalTime=0;//ÔËĞĞµÄ×ÜÊ±¼ä
-int GiveupTime=0;//ÓÃ»§·ÅÆúµÄ×î´óÊ±¼ä
-int EnterTime=0;//ĞÂÓÃ»§µ½À´µÄÊ±¼ä
-int UserId = 0;//ÓÃ»§id
-int ElevatorId = 0;//µçÌİid
-int LeavePeople=0;//Àë¿ªµÄÓÃ»§
-int ServerdPeople=0;//·şÎñµÄÓÃ»§
-int TotalWaitTime=0;//ÓÃ»§µÈ´ıµÄÊ±¼ä
+int mode;//æ˜¾ç¤ºæ¨¡å¼
+int CurrentTime=0;//å½“å‰çš„æ—¶é—´
+int TotalTime=0;//è¿è¡Œçš„æ€»æ—¶é—´
+int GiveupTime=0;//ç”¨æˆ·æ”¾å¼ƒçš„æœ€å¤§æ—¶é—´
+int EnterTime=0;//æ–°ç”¨æˆ·åˆ°æ¥çš„æ—¶é—´
+int UserId = 0;//ç”¨æˆ·id
+int ElevatorId = 0;//ç”µæ¢¯id
+int LeavePeople=0;//ç¦»å¼€çš„ç”¨æˆ·
+int ServerdPeople=0;//æœåŠ¡çš„ç”¨æˆ·
+int TotalWaitTime=0;//ç”¨æˆ·ç­‰å¾…çš„æ—¶é—´
 
 #define HEIGHT 25
 #define WIDTH 80
 
 using namespace std;
 
+void clear(){
+    printf("\033[2J");
+}
+
 void gotoxy(int x,int y){
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO cci;
-    GetConsoleCursorInfo(hOut,&cci);
-    COORD pos;
-    pos.X=x;
-    pos.Y=y;
-    SetConsoleCursorPosition(hOut,pos);
+    printf("\033[%d;%dH", (y), (x));
 }
 
 void HideCarsor(){
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO cci;
-    GetConsoleCursorInfo(hOut,&cci);
-    cci.bVisible=false;
-    SetConsoleCursorInfo(hOut,&cci);
+    printf("\033[?25l");
 }
 
 
 void PrintInfo(){
-    printf("µçÌİÊıÄ¿£º%d\n",MAX_ELEVATOR);
-    printf("Â¥²ãÊıÄ¿£º%d\n",MAX_FLOOR);
-    printf("Ê±¼ä£º      /%d\n\n",TotalTime);
+    printf("\033[H");
+    printf("ç”µæ¢¯æ•°ç›®ï¼š %d\n",MAX_ELEVATOR);
+    printf("æ¥¼å±‚æ•°ç›®ï¼š %d\n",MAX_FLOOR);
+    printf("æ—¶é—´ï¼š      /%d\n\n",TotalTime);
 
     for(int i=0;i<MAX_ELEVATOR;++i){
-        printf("µçÌİ%d µ±Ç°Â¥²ã:   ×´Ì¬:\n",elevator[i].id);
+        printf("ç”µæ¢¯%d  å½“å‰æ¥¼å±‚:    çŠ¶æ€:\n",elevator[i].id);
     }
     for(int i=0;i<MAX_ELEVATOR;++i){
-        gotoxy(WIDTH/2-1+i*6+4,0);
-        cout<<"µçÌİ"<<i<<" ";
+        gotoxy(WIDTH/2+i*6+4,0);
+        cout<<"ç”µæ¢¯"<<i<<" ";
     }
     for(int i=MAX_FLOOR-1;i>=0;--i){
-        gotoxy(WIDTH/2-1,MAX_FLOOR-i+1);
+        gotoxy(WIDTH/2,MAX_FLOOR-i+1);
         cout<<"F"<<i;
     }
+    
 }
 
 string ConditionToString(Condition c){
     switch (c) {
     case Idle:
-        return "´ı»ú    ";
+        return "å¾…æœº    ";
     case Opening:
-        return "¿ªÃÅÖĞ  ";
+        return "å¼€é—¨ä¸­  ";
     case Closing:
-        return "¹ØÃÅÖĞ  ";
+        return "å…³é—¨ä¸­  ";
     case Moving:
-        return "ÒÆ¶¯ÖĞ  ";
+        return "ç§»åŠ¨ä¸­  ";
     case Decelerate:
-        return "¼õËÙÖĞ  ";
+        return "å‡é€Ÿä¸­  ";
     case Closed:
-        return "¹ØÃÅÁË  ";
+        return "å…³é—¨äº†  ";
     case Opened:
-        return "ÃÅ´ò¿ªÁË";
+        return "é—¨æ‰“å¼€äº†";
     case Add:
-        return "ÓÃ»§µÈ´ı";
+        return "ç”¨æˆ·ç­‰å¾…";
     default:
-        return "Î´Öª    ";
+        return "æœªçŸ¥    ";
     }
 }
 
 void PrintTime(){
-    gotoxy(6,2);
+    gotoxy(6,3);
     printf("%d",CurrentTime);
     for(int i=0;i<MAX_ELEVATOR;++i){
-        gotoxy(15,4+i);
+        gotoxy(17,5+i);
         cout<<elevator[i].floor<<" ";
-        gotoxy(23,4+i);
+        gotoxy(27,5+i);
         cout<<ConditionToString(elevator[i].condition);
         for(int j=MAX_FLOOR-1;j>=0;--j){
             gotoxy(WIDTH/2-1+i*6+4,MAX_FLOOR-j+1);
@@ -106,13 +102,13 @@ void PrintTime(){
             }
         }
     }
-    sleep(0.1);
+    usleep(500);
 }
 
 /**
- Ìí¼ÓĞÂµÄÊÂ¼ş
- @param time Ê±¼ä½áÊøµÄÊ±¼ä
- @param fn Òª·¢ÉúµÄÊÂ¼ş
+ æ·»åŠ æ–°çš„äº‹ä»¶
+ @param time æ—¶é—´ç»“æŸçš„æ—¶é—´
+ @param fn è¦å‘ç”Ÿçš„äº‹ä»¶
  */
 void AddActivity(int time,Condition(*fn)(Elevator&),Elevator &e){
     Activity *temp = (Activity*)malloc(sizeof(Activity));
@@ -133,10 +129,10 @@ void AddActivity(int time,Condition(*fn)(Elevator&),Elevator &e){
 }
 
 /**
- Ìí¼ÓÓÃ»§ÊÂ¼ş
+ æ·»åŠ ç”¨æˆ·äº‹ä»¶
  */
 Condition AddPeople(Elevator &e){
-    //³õÊ¼»¯ÓÃ»§ start
+    //åˆå§‹åŒ–ç”¨æˆ· start
     People *p = (People*)malloc(sizeof(People));
     if(NULL==p)return None;
     p->id = UserId++;
@@ -146,31 +142,31 @@ Condition AddPeople(Elevator &e){
     do{
         p->OutFloor=rand()%MAX_FLOOR;
     }while(p->InFloor==p->OutFloor);
-    //³õÊ¼»¯ÓÃ»§ end
+    //åˆå§‹åŒ–ç”¨æˆ· end
     Status s;
-    //ÅĞ¶ÏÉÏÏÂÂ¥
-    if(p->InFloor>p->OutFloor){//ÏÂÂ¥
+    //åˆ¤æ–­ä¸Šä¸‹æ¥¼
+    if(p->InFloor>p->OutFloor){//ä¸‹æ¥¼
         s = EnQueue(e.w_q[p->InFloor][GoingDown],*p);
         e.CallDown[p->InFloor]=true;
     }else{
         s = EnQueue(e.w_q[p->InFloor][GoingUp],*p);
         e.CallUp[p->InFloor]=true;
     }
-    if(s==YES)//printf("ÓÃ»§%d½øÈëÁË%dºÅµçÌİÏÂµÄ%dÂ¥£¬ËûÒªÈ¥%dÂ¥\n",p->id,e.id,p->InFloor,p->OutFloor);
-    //ÏÂÒ»¸öÓÃ»§µ½À´µÄÊÂ¼şÌí¼Ó
+    if(s==YES)//printf("ç”¨æˆ·%dè¿›å…¥äº†%då·ç”µæ¢¯ä¸‹çš„%dæ¥¼ï¼Œä»–è¦å»%dæ¥¼\n",p->id,e.id,p->InFloor,p->OutFloor);
+    //ä¸‹ä¸€ä¸ªç”¨æˆ·åˆ°æ¥çš„äº‹ä»¶æ·»åŠ 
     AddActivity(CurrentTime+rand()%EnterTime,AddPeople,elevator[rand()%MAX_ELEVATOR]);
     e.count=0;
     return Add;
 }
 
 /**
- ÓÃ»§½ø³öµÄÊÂ¼ş
+ ç”¨æˆ·è¿›å‡ºçš„äº‹ä»¶
  */
 Condition InAndOut(Elevator &e){
     People p;
-    //ËµÃ÷µçÌİÓĞÈËÒª³öÀ´
+    //è¯´æ˜ç”µæ¢¯æœ‰äººè¦å‡ºæ¥
     if(e.CallCar[e.floor]){
-        //ËùÓĞÈËÀë¿ª
+        //æ‰€æœ‰äººç¦»å¼€
         if(IsEmpty_S(e.i_s[e.floor])!=YES){
             Pop(e.i_s[e.floor],p);
             e.peopleNum--;
@@ -180,7 +176,7 @@ Condition InAndOut(Elevator &e){
         }
     }else
     {
-        //ÓĞÈËÒª×ß½øµçÌİ
+        //æœ‰äººè¦èµ°è¿›ç”µæ¢¯
         if(e.peopleNum<MAX_PEOPLE&&YES!=IsEmpty_Q(e.w_q[e.floor][e.state])){
             DeQueue(e.w_q[e.floor][e.state],p);
             Push(e.i_s[p.OutFloor],p);
@@ -200,35 +196,35 @@ Condition InAndOut(Elevator &e){
 void init(){
     srand(time(0));
     while(1){
-        printf("ÇëÊäÈëµçÌİµÄÊıÄ¿(×î¶à5):");
-        while(!scanf("%d",&MAX_ELEVATOR)||(MAX_ELEVATOR<1||MAX_ELEVATOR>6)){while(getchar()!='\n');printf("ÇëÕıÈ·ÊäÈë\n");}
-        printf("ÇëÊäÈëÂ¥²ãµÄÊıÄ¿(×î¶à20):");
-        while(!scanf("%d",&MAX_FLOOR)||MAX_FLOOR<2||MAX_FLOOR>21){while(getchar()!='\n');printf("ÇëÕıÈ·ÊäÈë\n");}
-        printf("ÇëÑ¡ÔñÊÇ·ñ¶¯Ì¬ÏÔÊ¾µçÌİµÄÔËĞĞ×´Ì¬£¨1ÎªÊÇ£¬0Îª·ñ£©:");
-        while(!scanf("%d",&mode)||(mode!=1&&mode!=0)){while(getchar()!='\n');printf("ÇëÕıÈ·ÊäÈë1»ò0\n");}
-        printf("ÇëÊäÈëÔËĞĞµÄ×ÜÊ±¼ä:");
-        while(!scanf("%d",&TotalTime)){while(getchar()!='\n');printf("ÇëÊäÈëÊı×Ö\n");}
-        printf("ÇëÊäÈëÓÃ»§µÄ×î³¤ÈİÈÌÊ±¼ä(Ä¬ÈÏµÄµÈ´ıÊ±¼äÎª220£¬ÒÔÊäÈëµÄÖµÎª½çµÄËæ»úÖµ¼ÓÉÏ220Îª×îÖÕµÄµÈ´ıÊ±¼ä):");
-        while(!scanf("%d",&GiveupTime)){while(getchar()!='\n');printf("ÇëÊäÈëÊı×Ö\n");}
-        printf("ÇëÊäÈëÓÃ»§½øÈëÏµÍ³µÄ×î³¤¼ä¸ôÊ±¼ä(²»Ğ¡ÓÚ200):");
-        while(!scanf("%d",&EnterTime)||EnterTime<200){while(getchar()!='\n');printf("ÇëÕıÈ·ÊäÈë\n");}
-//        TotalTime=5000;
-//        EnterTime=200;
-//        GiveupTime=30;
-//        mode=1;
+        // printf("è¯·è¾“å…¥ç”µæ¢¯çš„æ•°ç›®(æœ€å¤š5):");
+        // while(!scanf("%d",&MAX_ELEVATOR)||(MAX_ELEVATOR<1||MAX_ELEVATOR>6)){while(getchar()!='\n');printf("è¯·æ­£ç¡®è¾“å…¥\n");}
+        // printf("è¯·è¾“å…¥æ¥¼å±‚çš„æ•°ç›®(æœ€å¤š20):");
+        // while(!scanf("%d",&MAX_FLOOR)||MAX_FLOOR<2||MAX_FLOOR>21){while(getchar()!='\n');printf("è¯·æ­£ç¡®è¾“å…¥\n");}
+        // printf("è¯·é€‰æ‹©æ˜¯å¦åŠ¨æ€æ˜¾ç¤ºç”µæ¢¯çš„è¿è¡ŒçŠ¶æ€ï¼ˆ1ä¸ºæ˜¯ï¼Œ0ä¸ºå¦ï¼‰:");
+        // while(!scanf("%d",&mode)||(mode!=1&&mode!=0)){while(getchar()!='\n');printf("è¯·æ­£ç¡®è¾“å…¥1æˆ–0\n");}
+        // printf("è¯·è¾“å…¥è¿è¡Œçš„æ€»æ—¶é—´:");
+        // while(!scanf("%d",&TotalTime)){while(getchar()!='\n');printf("è¯·è¾“å…¥æ•°å­—\n");}
+        // printf("è¯·è¾“å…¥ç”¨æˆ·çš„æœ€é•¿å®¹å¿æ—¶é—´(é»˜è®¤çš„ç­‰å¾…æ—¶é—´ä¸º220ï¼Œä»¥è¾“å…¥çš„å€¼ä¸ºç•Œçš„éšæœºå€¼åŠ ä¸Š220ä¸ºæœ€ç»ˆçš„ç­‰å¾…æ—¶é—´):");
+        // while(!scanf("%d",&GiveupTime)){while(getchar()!='\n');printf("è¯·è¾“å…¥æ•°å­—\n");}
+        // printf("è¯·è¾“å…¥ç”¨æˆ·è¿›å…¥ç³»ç»Ÿçš„æœ€é•¿é—´éš”æ—¶é—´(ä¸å°äº200):");
+        // while(!scanf("%d",&EnterTime)||EnterTime<200){while(getchar()!='\n');printf("è¯·æ­£ç¡®è¾“å…¥\n");}
+        TotalTime=5000;
+        EnterTime=200;
+        GiveupTime=30;
+        mode=1;
         activities=NULL;
         CurrentTime=0;
         UserId=0;
         ElevatorId=0;
-        system("cls");
+        clear();
         elevator = (Elevator*)malloc(sizeof(Elevator)*MAX_ELEVATOR);
         for(int i=0;i<MAX_ELEVATOR;++i){
             InitElevator(elevator[i]);
             elevator[i].id=ElevatorId++;
         }
         run();
-        system("pause");
-        system("cls");
+        getchar();
+        clear();
     }
 }
 
@@ -237,10 +233,10 @@ void run(){
         HideCarsor();
         PrintInfo();
     }
-    //Ê×ÏÈÎªÊ±ĞòÌí¼ÓÒ»¸öÓÃ»§
+    //é¦–å…ˆä¸ºæ—¶åºæ·»åŠ ä¸€ä¸ªç”¨æˆ·
     AddActivity(CurrentTime+rand()%EnterTime,AddPeople,elevator[rand()%MAX_ELEVATOR]);
     while(++CurrentTime<=TotalTime){
-        //ÓÃ»§½ø³öµçÌİ
+        //ç”¨æˆ·è¿›å‡ºç”µæ¢¯
         for(int m=0;m<MAX_ELEVATOR;++m){
             if(elevator[m].condition==Opened){
                 InAndOut(elevator[m]);
@@ -277,5 +273,5 @@ void run(){
         }
     }
     if (mode==1)gotoxy(0,HEIGHT);
-    printf("Ò»¹²À´ÁË%dÈË,%dÈËÃ»µÈµçÌİ¾Í×ßÁË,·şÎñÁË%d¸öÈË,Æ½¾ùµÈ´ıÊ±¼äÎª%f\n",UserId,LeavePeople,ServerdPeople,TotalWaitTime/(ServerdPeople*1.0));
+    printf("ä¸€å…±æ¥äº†%däºº,%däººæ²¡ç­‰ç”µæ¢¯å°±èµ°äº†,æœåŠ¡äº†%dä¸ªäºº,å¹³å‡ç­‰å¾…æ—¶é—´ä¸º%f\n",UserId,LeavePeople,ServerdPeople,TotalWaitTime/(ServerdPeople*1.0));
 }
